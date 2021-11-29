@@ -53,33 +53,45 @@ df
 
 df.to_html()
 
-# 1. Use browser to visit the URL for Mars hemisphere images
+# 1. Use browser to visit the URL 
 url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
 browser.visit(url)
+
+# Parse the data
+hemi_html = browser.html
+hemi_soup = soup(hemi_html, 'html.parser')
+
+# Retrieve all items for hemispheres information
+items = hemi_soup.find_all('div', class_='item')
 
 # 2. Create a list to hold the images and titles.
 hemisphere_image_urls = []
 
 # 3. Write code to retrieve the image urls and titles for each hemisphere.
-for hemis in range(4):
-    # Browse through each article
-    browser.links.find_by_partial_text('Hemisphere')[hemis].click()
+
+main_url = "https://astrogeology.usgs.gov/"
+
+# Create loop to scrape through all hemisphere information
+for x in items:
+    hemisphere = {}
+    titles = x.find('h3').text
+    # create link for full image
+    link_ref = x.find('a', class_='itemLink product-item')['href']
+    # Use the base URL to create an absolute URL and browser visit
+    browser.visit(main_url + link_ref)
+    # parse the data
+    image_html = browser.html
+    image_soup = soup(image_html, 'html.parser')
+    download = image_soup.find('div', class_= 'downloads')
+    img_url = download.find('a')['href']
     
-    # Parse the HTML
-    html = browser.html
-    hemi_soup = soup(html,'html.parser')
+    print(titles)
+    print(img_url)
     
-    # Scraping
-    title = hemi_soup.find('h2', class_='title').text
-    img_url = hemi_soup.find('li').a.get('href')
-    
-    # Store findings into a dictionary and append to list
-    hemispheres = {}
-    hemispheres['img_url'] = f'https://astrogeology.usgs.gov/search/map/Mars/Viking/{img_url}'
-    hemispheres['title'] = title
-    hemisphere_image_urls.append(hemispheres)
-    
-    # Browse back to repeat
+    # append list
+    hemisphere['img_url'] = img_url
+    hemisphere['title'] = titles
+    hemisphere_image_urls.append(hemisphere)
     browser.back()
 
 # 4. Print the list that holds the dictionary of each image url and title.
@@ -87,7 +99,6 @@ hemisphere_image_urls
 
 # 5. Quit the browser
 browser.quit()
-
 
 
 
